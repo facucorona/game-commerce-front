@@ -1,0 +1,109 @@
+import React from 'react'
+import ProductCard from '../Cards/ProductCard/ProductCard.jsx'
+import CardForSale from '../Cards/CardForSale/CardForSale'
+import CardSlider from '../Cards/CardsSlider/CardsSlider.jsx'
+import { useSelector, useDispatch } from 'react-redux'
+import { useEffect, useState } from 'react'
+import { getAllProducts, getUsedGenres, getUsedPlatforms } from '../../redux/actions.js'
+import { Link } from 'react-router-dom'
+import Spinner from '../Spinner/Spinner.jsx'
+import CardLanding from '../CardLanding/CardLanding.jsx'
+
+const CardContainer = () => {
+
+  const Allproducts = useSelector((state) => state.products)
+  const searchered = useSelector((state) => state.searchered)
+  /* const AllGenres = useSelector((state) => state.usedGenres).map(e => e.name)
+  const AllPlataforms = useSelector((state) => state.usedPlatforms).map(e => e.name) */
+  const AllGenres = [...new Set(Allproducts.map(e => e.genres).flat().map(e => e.name))]
+  const AllPlataforms = [...new Set(Allproducts.map(e => e.platforms).flat().map(e => e.name))]
+
+  const prueba = ["Puzzle", "Action", "Adventure", "Shooter"]
+  const prueba2 = ["PC", "Linux", "Xbox One", "Nintendo Switch"]
+  const years = [2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017]
+
+  const [randomGen, setRandomGen] = useState("Puzzle")
+  const [randomPlat, SetRandomPLat] = useState("PC")
+  const [randomYear, SetRandomYear] = useState()
+
+  useEffect(() => {
+    setInterval(() => {
+      var genre = prueba[Math.floor(Math.random() * prueba.length)]
+       setRandomGen(genre)
+    }, 10000);
+  },[setInterval])
+
+  useEffect(() => {
+    setInterval(() => {
+      var plataf = prueba2[Math.floor(Math.random() * prueba.length)]
+      SetRandomPLat(plataf)  
+    }, 10000);
+  },[setInterval])
+
+  const [start, setStart] = useState(0)
+  const [finish, setFinish] = useState(9)
+
+  
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(getAllProducts())
+    ramYear()
+  }, [])
+
+  /* useEffect(() => {
+    setTimeout(() => {
+      SetRandomGen(AllGenres[Math.floor(Math.random() * AllGenres.length)])
+      
+    }, 2000)
+  }, [setTimeout]) */
+
+  /*   const ramGen = async () => {
+      let randGen = Math.floor(Math.random() * AllGenres.length)
+      const x = await AllGenres[randGen]
+      SetRandomGen(x)
+    };
+  
+   const ramPlat = async () => {
+      let randPlat = Math.floor(Math.random() * AllPlataforms.length)
+      const y = await AllPlataforms[randPlat]
+      SetRandomPLat(y)
+    }; */
+
+  const ramYear = () => {
+    let randYear = Math.floor(Math.random() * years.length)
+    const x = years[randYear]
+    SetRandomYear(x)
+
+  };
+
+  const forSale = Allproducts.filter((e) => e.released.slice(0, 4) > randomYear)
+  const genres = Allproducts.filter((c) => c.genres.find((c) => c.name === randomGen))
+  const platforms = Allproducts.filter((c) => c.platforms.find((c) => c.name === randomPlat))
+  
+  // ARCADE: tres "pistas" de la sala (ofertas / plataformas / géneros), cada una
+  // con rótulo pixel magenta y encuadre de cabina (DESIGN_SYSTEM.md §4)
+  return (
+        <div className="mx-auto w-full max-w-[1400px] px-4 py-8 md:px-8">
+
+          {Allproducts.length>0?<CardForSale forSale={forSale.slice(0,8)}/>:<Spinner />}
+          
+              {/* Plataforms */}
+              {platforms.length>0?(<section className="mt-12 rounded-xl border-2 border-line bg-cab/60 p-5">
+              <p className="gc-pixel text-[10px] uppercase text-magenta">Recomendado</p>
+              <h2 className="font-display text-2xl uppercase tracking-wide text-ink">{randomPlat}</h2>
+                <CardSlider platforms={platforms} i={1}/>
+              </section>): <Spinner />}
+              
+              {/* Genres */}
+              {genres.length>0?(<section className="mt-8 rounded-xl border-2 border-line bg-cab/60 p-5">
+              <p className="gc-pixel text-[10px] uppercase text-magenta">Recomendado</p>
+              <h2 className="font-display text-2xl uppercase tracking-wide text-ink">{randomGen}</h2>
+                <CardSlider platforms={genres} i={2}/>
+              </section>) : <Spinner />}
+
+      </div>
+  )
+}
+
+export default CardContainer

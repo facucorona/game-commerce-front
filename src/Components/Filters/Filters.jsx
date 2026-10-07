@@ -1,0 +1,134 @@
+import React from 'react'
+import { asc, desc, orderRating, orderEsrb, Orderby } from '../../redux/actions.js'
+import {useDispatch, useSelector} from 'react-redux'
+
+
+// NOTA ARCADE: el orden del catálogo es un selector de la cabina → etiqueta
+// pixel + select de panel con foco cian. Se eliminó `styles` y su
+// `filters.module.css`: el select se dibuja con tokens. La lógica (los
+// dispatch por case, el value de cada option y el onChange) queda intacta.
+
+function Filters() {
+
+  const class_esrb = useSelector((state) => state.products).map(e => e.esrb_rating)
+
+  const newClassEsrb = [...class_esrb]
+  let esrbX = newClassEsrb.filter((item,index)=>{
+      return newClassEsrb.indexOf(item) === index;
+    })
+
+  const esrbMock = [ "Teen", "Mature", "Not rated", "Adults Only", "Everyone", "Everyone 10+", "Rating Pending" ]
+
+
+  const dispatch = useDispatch()
+
+  function abcOrder(event) {
+
+    event.preventDefault()
+      let value = event.target.value
+      value === "A-Z" 
+      ? dispatch(asc())
+      : dispatch(desc())
+  }
+
+  
+  function byRating(event) {
+    event.preventDefault()
+    let value = event.target.value
+    dispatch(orderRating(value))
+  }
+  
+  function esrbContent(event) {
+    event.preventDefault()
+    let value = event.target.value
+    dispatch(orderEsrb(value))
+  }
+  
+  let handlerChange = (e)=>{
+    switch(e.target.value){
+        case  "A-Z":
+            dispatch(Orderby((a, b) => { return a.name.toUpperCase() < b.name.toUpperCase() ? -1 : 1 })); break //si es menor -1
+        case "Z-A":
+            dispatch(Orderby((a, b) => { return b.name.toUpperCase() < a.name.toUpperCase() ? -1 : 1 })); break
+        case "higher":
+            dispatch(Orderby((a,b)=>{return b.rating - a.rating })); break //si el puntaje es menor lo mueve al fondo
+        case "lower":
+            dispatch(Orderby((a,b)=>{return a.rating - b.rating })); break
+        case "Highest_Price":
+            dispatch(Orderby((a,b)=>{
+              if (!a.price && !b.price) {
+                return 0;
+              }
+              if (!a.price) {
+                return 1;
+              }
+              if (!b.price) {
+                return -1;
+              }
+              return b.price - a.price
+            })); break
+        case "Lowest_Price":
+            dispatch(Orderby((a,b)=>{return a.price - b.price})); break
+        default: break;
+    };
+};
+
+  return (
+    <div className="mb-5 flex flex-wrap items-center justify-end gap-2">
+      <div className="flex items-center gap-2">
+        {/* Sort by: */}
+        <label htmlFor="gc-order-by" className="gc-pixel text-[9px] uppercase text-dim">Ordenar</label>
+        <select
+          id="gc-order-by"
+          className="gc-pixel appearance-none rounded-lg border border-line bg-panel px-4 py-2 text-[10px] uppercase text-ink outline-none transition focus:border-neon focus:shadow-[0_0_16px_rgba(0,240,255,0.35)]"
+          onChange={(e) => handlerChange(e)}
+        > {/* propuesta rango de precio */}
+        <option disabled={false} value="default">Order by...</option>
+          <option  value="Highest_Price">Price: Higher to lower</option>
+          <option value="Lowest_Price">Price: Lower to Higher</option>
+          <option value="higher">Rating: Higher to lower</option>
+          <option value="lower">Rating: Lower to Higher</option>
+          <option value="A-Z">A-Z</option>
+          <option value="Z-A">Z-A</option>
+        </select>
+      </div>
+      <div>
+{/*         <select onChange={(e) => byRating(e)}>
+          <option>Rating</option>
+          <option>High to Low</option>
+          <option>Low to High</option>
+        </select> */}
+      </div>
+      {/* <div>
+        <select>
+          <option>Release date</option>  
+        </select>
+      </div> */}
+    </div>
+  )
+}
+
+export default Filters
+
+
+{/* <div className="flex justify-center"> 
+        <div>
+            <select className={style.filters} name="" id="">
+              <option disabled={false}> Order by...</option>
+              <option onClick={(e) => asc_abc(e)}> Name: Asc </option>
+              <option onClick={(e) => asc_abc(e)}> Name: Desc </option>
+              <option onClick={(e) => orderOrderRating(e)}> Rating: high to low </option>
+              <option onClick={(e) => orderOrderRating(e)}> Rating low to high </option>
+              <option onClick={(e) => orderPrice(e)}> Price: high to low </option>
+              <option onClick={(e) => orderPrice(e)}> Price: Low to high </option>
+            </select>
+
+            <select  name="" id="">
+                <option> By ERSB...</option>
+                  {esrbMock.map((ersb, index) => {
+                  return <option onClick={(e) => esrbContent(e)} key={index}> {ersb} </option>
+                 })}
+            </select>
+
+        </div>
+    </div> */}

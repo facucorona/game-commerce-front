@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="utf-8" />
+  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0A0614" />
+  <meta name="description" content="GamE-Commerc: tu recreativa de juegos online" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+
+  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <title>GAME-COMMERCE</title>
+
+  <!--
+    ===========================================================================
+    ESTILOS
+    · styles.css  → Tailwind compilado por CLI (npm run build-css).
+                    Se carga PRIMERO para que cualquier estilo propio lo pise.
+    · bootstrap-icons → se conserva: es la única librería de iconos del proyecto
+                    (se usa como <i className="bi bi-xxx" />). Bootstrap como
+                    framework (CSS + JS + Popper) fue REMOVIDO a propósito:
+                    el diseño arcade se construye con tokens y utilidades
+                    propias, y sus utilidades chocaban con las nuestras
+                    (.btn, .card, .rounded, .shadow...).
+    ===========================================================================
+  -->
+  <link href="%PUBLIC_URL%/styles.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
+
+  <!-- mercadopago (checkout) -->
+  <script src="https://sdk.mercadopago.com/js/v2"></script>
+
+  <!-- script Widget Cloudinary -->
+  <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
+
+  <!--
+    FUENTES DE LA DIRECCIÓN ARCADE
+    · Anton         → rótulos de cabina (titulares y logos)
+    · Press Start 2P→ etiquetas pixel: precios, teclas, "INSERT COIN"
+    · Space Grotesk → texto corrido, formularios
+  -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Press+Start+2P&family=Space+Grotesk:wght@400;500;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"></div>
+</body>
+
+</html>

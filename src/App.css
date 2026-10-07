@@ -1,0 +1,28 @@
+/* ============================================================================
+ * APP · LA SALA
+ * ----------------------------------------------------------------------------
+ * Contenedor raíz. El fondo, la viñeta y los scanlines los pone index.css
+ * (fijo, detrás de todo). Acá solo va la estructura y la tipografía base.
+ * ========================================================================== */
+
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* Alineado a la izquierda: el diseño arcade usa bloques, no texto centrado */
+  text-align: left;
+  background: transparent;
+  color: hsl(var(--ink));
+  font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  position: relative;
+}
+
+.footer {
+  width: 100%;
+}
+
+.App-link {
+  color: hsl(var(--neon));
+}

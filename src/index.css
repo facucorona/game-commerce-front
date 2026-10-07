@@ -1,0 +1,390 @@
+/* ============================================================================
+ * GAMECOMMERCE · SISTEMA ARCADE
+ * ----------------------------------------------------------------------------
+ * Dirección visual: recreativa / sintetizador (cabinas, neones, créditos).
+ * Referencia: maqueta "E · Arcade" en pen.dev. Recetas: DESIGN_SYSTEM.md
+ *
+ * Este archivo es el INPUT de Tailwind CLI:
+ *     npm run build-css   → compila a public/styles.css
+ *     npm run watch-css   → recompila al guardar
+ * CRA4 ignora postcss.config.js, por eso Tailwind se compila por CLI aparte.
+ *
+ * NOTA IMPORTANTE: las utilidades decorativas de la sección final están FUERA
+ * de @layer a propósito. Tailwind depura del layer components las reglas cuyo
+ * selector todavía no aparece en el código, y aquí las queremos disponibles
+ * siempre para poder aplicarlas en cualquier pantalla nueva.
+ * ========================================================================== */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* --- LA SALA (fondos y superficies) --- */
+    --void: 265 55% 6%; /* #0A0614 negro-violeta, el fondo de la sala */
+    --cab: 262 51% 11%; /* #130A28 la máquina: tarjetas y paneles */
+    --panel: 262 45% 15%; /* #1E1140 un paso más claro: inputs y filas */
+    --line: 258 50% 24%; /* #3A2470 el bisel violeta que separa las piezas */
+
+    /* --- LOS NEONES (lo que emite luz) --- */
+    --magenta: 331 100% 59%; /* #FF2E93 rótulo de la marquesina + CTA */
+    --neon: 187 100% 50%; /* #00F0FF pantalla encendida: enlaces y foco */
+    --bulb: 50 100% 50%; /* #FFD400 bombillas del marco y alertas */
+    --credit: 83 100% 62%; /* #B6FF3C créditos = PRECIOS (solo precios) */
+
+    /* --- TEXTO --- */
+    --ink: 250 40% 96%; /* #F2EEFF texto principal */
+    --dim: 250 24% 60%; /* #9A8EC8 texto secundario */
+
+    --destructive: 354 100% 65%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  /* ------------------------------------------------------------------------
+   * MINI-PREFLIGHT
+   * Con el preflight real de Tailwind apagado, esto reemplaza su reset.
+   * border-style: solid es IMPRESCINDIBLE: sin él las utilities border /
+   * border-2 calculan 0px y ningún borde se ve en toda la app.
+   * Las utilities siguen ganando porque van en la capa utilities.
+   * --------------------------------------------------------------------- */
+  *,
+  *::before,
+  *::after {
+    /* CRÍTICO: sin el preflight de Tailwind hay que ponerlo a mano.
+       Con content-box (el default), un contenedor `w-full px-4` mide 100% del
+       padre MÁS el padding → desborda la página y aparece scroll horizontal
+       en todas las rutas. Con border-border el padding entra dentro del ancho. */
+    box-sizing: border-box;
+    border-width: 0;
+    border-style: solid;
+    border-color: hsl(var(--line));
+  }
+
+  /* :where() deja el reset en especificidad 0: neutraliza el estilo del
+     navegador pero TODA utility (px-5, bg-magenta, text-white…) le gana.
+     Sin :where, `input[type="submit"]` (0-1-1) pisaba a las utilities (0-1-0)
+     y el botón de login quedaba como texto plano: sin fondo ni padding. */
+  :where(button, input[type="button"], input[type="submit"], input[type="reset"]) {
+    background-color: transparent;
+    border-width: 0;
+    padding: 0;
+    color: inherit;
+    font-family: inherit;
+    text-align: inherit;
+    cursor: pointer;
+  }
+
+  img,
+  svg,
+  video {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Sin preflight, los <a> conservan el subrayado y el azul del user-agent:
+     en la captura se veía "CART", "LOGIN" y el logo subrayados. En el arcade
+     los enlaces heredan el color de su contexto. */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* El fondo real vive en <html> y el <body> queda transparente a propósito:
+     así los overlays fijos de abajo (rejilla + viñeta + scanlines) se pintan
+     ENCIMA del fondo y POR DEBAJO del contenido. Si el body tuviera color
+     propio, los taparía. */
+  html {
+    background: hsl(var(--void));
+  }
+
+  body {
+    @apply text-ink;
+    font-family: "Space Grotesk", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* --- CAMA DE LA SALA (siempre presente, detrás de todo) ---
+     Dos capas fijas: rejilla violeta + viñeta (::before) y scanlines (::after).
+     Se declaran aquí para no depender de que cada pantalla las pida. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    /* Tres capas apiladas: viñeta (encima), rejilla vertical y horizontal.
+       OJO: la viñeta va en background-image, NO en background-color: un
+       gradiente no es un valor válido de color y el navegador lo descarta. */
+    background-image:
+      radial-gradient(
+        ellipse at 50% 30%,
+        rgba(123, 47, 255, 0.18) 0%,
+        rgba(10, 6, 20, 0) 55%,
+        rgba(4, 2, 10, 0.9) 100%
+      ),
+      linear-gradient(rgba(58, 36, 112, 0.32) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(58, 36, 112, 0.32) 1px, transparent 1px);
+    background-size: auto, 42px 42px, 42px 42px;
+  }
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: repeating-linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.22) 0px,
+      rgba(0, 0, 0, 0.22) 1px,
+      transparent 1px,
+      transparent 4px
+    );
+  }
+
+  /* Titulares = rótulo de cabina (Anton, condensada y enorme) */
+  h1,
+  h2,
+  h3 {
+    font-family: "Anton", "Arial Black", sans-serif;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+  }
+
+  ::selection {
+    background: hsl(var(--magenta));
+    color: #fff;
+  }
+
+  /* Scrollbar: caño violeta con punta magenta */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--void));
+  }
+  ::-webkit-scrollbar-thumb {
+    border-radius: 100px;
+    background: linear-gradient(180deg, #ff2e93, #3a2470);
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #ff6bb4, #5b3aa8);
+  }
+}
+
+/* ============================================================================
+ * UTILIDADES ARCADE
+ * Traducen literalmente las piezas de la maqueta E · Arcade a CSS.
+ * (repeating-linear-gradient / radial-gradient: sin imágenes ni dependencias)
+ * ========================================================================== */
+
+/* Viñeta: oscurece los bordes para que el centro parezca "bajo el foco" */
+.gc-vignette {
+  background: radial-gradient(
+    ellipse at 50% 35%,
+    rgba(123, 47, 255, 0.16) 0%,
+    rgba(10, 6, 20, 0) 55%,
+    rgba(5, 3, 12, 0.85) 100%
+  );
+}
+
+/* Scanlines: líneas horizontales finitas que emulan un CRT */
+.gc-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.28) 0px,
+    rgba(0, 0, 0, 0.28) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+/* Rejilla de la sala: la cuadrícula violeta del fondo */
+.gc-grid {
+  background-image:
+    linear-gradient(rgba(58, 36, 112, 0.35) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(58, 36, 112, 0.35) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+/* Modo atracción: el degradado diagonal de la pantalla de cada cabina.
+   Valores copiados del frame "E · Arcade" de pen.dev (no aproximados):
+   linear-gradient(-118.389deg, #FF2E93 14.645%, #7B2FFF 57.071%, #0A0614 85.355%) */
+.gc-attract {
+  background: linear-gradient(
+    -118.389deg,
+    #ff2e93 14.645%,
+    #7b2fff 57.071%,
+    #0a0614 85.355%
+  );
+}
+
+/* Fila de bombillas del marquee: 18 bombillas fijas miden ~560px, más que una
+   tarjeta angosta (login = 460px). Sin recorte, desbordan por los costados.
+   Con overflow hidden el excedente se corta simétrico y parece que la hilera
+   sigue detrás del marco. Las bombillas llevan flex-shrink: 0 para que no se
+   deformen al recortar. */
+.gc-bulb-row {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Una bombilla del marquee.
+   El color llega por variable CSS (--bulb-color) desde <BulbRow />, así cada
+   bombilla brilla con el suyo. Estado de reposo = medidas del mock de pen.dev
+   (16px, halo 0 0 18px). Al hover solo se INTENSIFICA el halo: la bombilla NO
+   cambia de tamaño (una hilera de bombillas que encoge y engorda se ve rota). */
+.gc-bulb {
+  height: 1rem;
+  width: 1rem;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background-color: var(--bulb-color);
+  box-shadow: 0 0 18px var(--bulb-color);
+  opacity: 0.85;
+  pointer-events: auto;
+  cursor: pointer;
+  transition: box-shadow 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+}
+.gc-bulb:hover {
+  opacity: 1;
+  filter: brightness(1.3);
+  box-shadow: 0 0 26px var(--bulb-color), 0 0 44px var(--bulb-color);
+}
+
+/* Título arcade — hover en grupo: al pasar por GAM o - resalta todo lo magenta;
+   al pasar por E o COMMERCE resalta todo lo neón.
+   Sin transform/scale: igual que las bombillas, el tamaño no cambia. */
+.gc-title {
+  transition: text-shadow 0.2s ease, filter 0.2s ease;
+}
+.gc-title .g-mag,
+.gc-title .g-neon {
+  transition: text-shadow 0.2s ease, filter 0.2s ease, color 0.2s ease;
+}
+
+/* Base shadows (reemplazan los arbitrary values de Tailwind) */
+nav.sticky .gc-title .g-mag,
+nav[class*="border-t-2"] .gc-title .g-mag {
+  text-shadow: 0 0 18px rgba(255, 46, 147, 0.6);
+}
+nav.sticky .gc-title .g-neon,
+nav[class*="border-t-2"] .gc-title .g-neon {
+  text-shadow: 0 0 18px rgba(0, 240, 255, 0.6);
+}
+section.gc-vignette .gc-title .g-mag {
+  filter: drop-shadow(0 0 13px rgba(255, 46, 147, 0.4));
+}
+section.gc-vignette .gc-title .g-neon {
+  filter: drop-shadow(0 0 13px rgba(0, 240, 255, 0.4));
+}
+
+/* Header y Footer: hover intensifica text-shadow del grupo (mayor especificidad) */
+nav.sticky .gc-title.hover-mag .g-mag {
+  text-shadow: 0 0 30px rgba(255, 46, 147, 0.9), 0 0 50px rgba(255, 46, 147, 0.7) !important;
+  filter: brightness(1.3) !important;
+}
+nav[class*="border-t-2"] .gc-title.hover-mag .g-mag {
+  text-shadow: 0 0 30px rgba(255, 46, 147, 0.9), 0 0 50px rgba(255, 46, 147, 0.7) !important;
+  filter: brightness(1.3) !important;
+}
+nav.sticky .gc-title.hover-neon .g-neon {
+  text-shadow: 0 0 30px rgba(0, 240, 255, 0.9), 0 0 50px rgba(0, 240, 255, 0.7) !important;
+  filter: brightness(1.3) !important;
+}
+nav[class*="border-t-2"] .gc-title.hover-neon .g-neon {
+  text-shadow: 0 0 30px rgba(0, 240, 255, 0.9), 0 0 50px rgba(0, 240, 255, 0.7) !important;
+  filter: brightness(1.3) !important;
+}
+
+/* LandingPage: hover intensifica drop-shadow del grupo */
+section.gc-vignette .gc-title.hover-mag .g-mag {
+  filter: drop-shadow(0 0 26px rgba(255, 46, 147, 0.9)) brightness(1.3) !important;
+}
+section.gc-vignette .gc-title.hover-neon .g-neon {
+  filter: drop-shadow(0 0 26px rgba(0, 240, 255, 0.9)) brightness(1.3) !important;
+}
+
+/* Texto pixel (etiquetas, precios, teclas de juego) */
+.gc-pixel {
+  font-family: "Press Start 2P", monospace;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+/* Botón de créditos ("INSERT COIN") — medidas del frame "E · Arcade" de pen.dev.
+   Va como clase y no con utilidades sueltas por dos motivos:
+     a) El degradado va de #FF2E93 a #7B2FFF, y #7B2FFF no es un token del
+        proyecto. Con utilidades, alguien lo reemplaza por `to-ash` (clase que no
+        existe) y el botón queda de magenta a TRANSPARENTE: se ve cortado.
+     b) El botón necesita(height, radio, glow y centrado) ir siempre juntos;
+        si uno se olvida, el botón se descuadra respecto de la maqueta.
+   Valores del export: linear-gradient(0deg,#FF2E93 0%,#7B2FFF 100%),
+   border-radius 8px, box-shadow 0 0 24px #FF2E9366, height 44px, label 12px. */
+.gc-coin {
+  background-image: linear-gradient(0deg, #ff2e93 0%, #7b2fff 100%);
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 0 24px rgba(255, 46, 147, 0.4);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  width: 100%;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.gc-coin:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.55) brightness(0.75);
+}
+.gc-coin:hover:not(:disabled) {
+  filter: brightness(1.12);
+}
+
+/* El neón que emite luz. Se usa en bordes y botones, no en texto. */
+.gc-glow-magenta {
+  box-shadow: 0 0 22px rgba(255, 46, 147, 0.45);
+}
+.gc-glow-cyan {
+  box-shadow: 0 0 22px rgba(0, 240, 255, 0.4);
+}
+.gc-glow-bulb {
+  box-shadow: 0 0 18px rgba(255, 212, 0, 0.55);
+}
+
+/* Parpadeo del rótulo: el texto que llama la atención */
+@keyframes gc-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+.gc-blink {
+  animation: gc-blink 1.6s step-end infinite;
+}
+
+/* Rollo del carrusel: entra desde un lado, como las maquinas en fila */
+@keyframes gc-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.gc-drop-in {
+  animation: gc-slide-in 0.35s ease-out both;
+}
