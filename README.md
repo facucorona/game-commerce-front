@@ -59,3 +59,30 @@ La dirección arcade está documentada en `./DESIGN_SYSTEM.md` (tokens, recetas,
 | `npm run build-css` | Compila `src/index.css` → `public/styles.css` (una vez) |
 | `npm run watch-css` | Recompila al guardar |
 | `npm test` / `npm run build` | Estándar CRA |
+
+## Deploy (Vercel)
+
+Dos cosas obligatorias, ambas por el toolchain CRA4/webpack4:
+
+1. **Variable de entorno `NODE_OPTIONS=--openssl-legacy-provider`.** Sin ella, webpack4
+   usa un hash de OpenSSL que Node 17+ ya no soporta y el build muere con
+   `ERR_OSSL_EVP_UNSUPPORTED`.
+2. **El build necesita `public/styles.css` compilado.** `styles.css` está
+   versionado (Tailwind corre por CLI, no por CRA), así que el build de Vercel lo
+   toma como está. Si tocás clases, corré `npm run build-css` y commiteá el
+   resultado.
+
+Además `REACT_APP_URL` debe apuntar al backend desplegado (con la barra final,
+los thunks concatenan `${REACT_APP_URL}videogames`).
+
+### Trampas de dependencias (resueltas, no las toques sin leer)
+
+- **`.npmrc` con `legacy-peer-deps=true`**: `react-reveal@1.2.2` declara peers de
+  React 15/16 y nunca publicó versión para 17. npm 7+ corta el install por eso.
+- **`overrides.babel-preset-react-app = 10.0.0` en `package.json`**:
+  `react-scripts@4.0.3` pinea `@babel/core` en `7.12.3` exacto, pero su
+  `babel-preset-react-app@^10.0.0` resolvería a `10.1.0`, que exige `^7.16.0`.
+  El build falla con `[BABEL] Requires Babel "^7.16.0", but was loaded with "7.12.3"`.
+  Fijando `10.0.0` (que pide `7.12.3` exacto) el árbol queda consistente.
+
+Los dos van comentados en `.npmrc`. Si `npm run build` vuelve a romper, empezá por ahí.

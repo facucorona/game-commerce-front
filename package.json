@@ -38,6 +38,9 @@
     "build-css": "tailwindcss -i src/index.css -o public/styles.css",
     "watch-css": "tailwindcss -i src/index.css -o public/styles.css --watch"
   },
+  "overrides": {
+    "babel-preset-react-app": "10.0.0"
+  },
   "eslintConfig": {
     "extends": [
       "react-app",

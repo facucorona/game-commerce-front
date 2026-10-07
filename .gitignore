@@ -1,5 +1,10 @@
 node_modules
-# package-lock.json
+# build de producción (lo regenera CRA; nunca se versiona)
+build/
+# package-lock.json SÍ se versiona: sin él, Vercel resuelve dependencias desde
+# cero en cada build y el resultado depende de qué publique npm ese día. Con el
+# lock, el install es reproducible. Ojo: si tocás package.json, regenerá el
+# lock antes de pushear.
 package-lock.json
 # dotenv environment variables file
 .env
