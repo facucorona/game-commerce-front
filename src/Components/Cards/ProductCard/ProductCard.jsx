@@ -17,7 +17,7 @@ import pc from '../../../images/PC.png'
 
 
 
-export default function ProductCard({ id, id_api, name, img, rating, platforms, price, fromApi, isDisabled, genres }) {
+export default function ProductCard({ id, id_api, name, img, rating, platforms, price, fromApi, isDisabled, genres, steam_rating_score, steam_rating_desc, steam_rating_reviews }) {
   let cart = useSelector(state => state.cart);
   let user = useSelector(state => state.users);
   let games = useSelector(state => state.products2).map(e => e.name); //140 --
@@ -164,22 +164,39 @@ export default function ProductCard({ id, id_api, name, img, rating, platforms, 
 
   //orders.forEach(e => {if(e === name){setAdquiridos(true)}})
 
-  rating = Math.floor(rating / 10)
-  // console.lograting)
+  /*
+   * RATING — 5 estrellas, del puntaje OFICIAL de Steam.
+   *
+   * Antes esto hacía `Math.floor(rating / 10)` sobre el campo legacy `rating`,
+   * que venía en dos flavors y ninguno servía: 0 para lo importado de Steam
+   * (sin fuente) y 100 para los juegos viejos de RAWG (escala 0-100). Con 100
+   * daba 10 y el badge mostraba "10/6"; con 0 no se veía ninguna estrella.
+   *
+   * Ahora la fuente es `steam_rating_score` (review_score de Steam, 0-10) y se
+   * convierte a 5 estrellas dividiendo por 2. Se conserva el campo legacy como
+   * plan B para los juegos que todavía no pasaron por el sync.
+   *
+   * `Math.min` es la guarda final: aunque el dato venga raro, nunca se dibujan
+   * más de 5 estrellas ni el badge desborda.
+   */
+  const MAX_ESTRELLAS = 5
 
-  let arr = []
-  for(let i = 0; i<rating; i++){
-    arr.push(1)
+  const puntajeSteam = Number(steam_rating_score)
+
+  // Sin rating oficial: se cae al legacy (0-100 → 5 estrellas). Si tampoco hay,
+  // queda null y se muestra "sin puntuar" en vez de 0 estrellas mudas.
+  let estrellas = null
+  if (Number.isFinite(puntajeSteam) && puntajeSteam > 0) {
+    estrellas = Math.round(puntajeSteam / 2)
+  } else if (Number(rating) > 0) {
+    estrellas = Math.round(Number(rating) / 20)
   }
-  // if(rating<6){
-  //   let resto = 6 - rating;
-  //   let restoArr =
-  // }
-  let blackstars = []
-  if(rating<6){
-  for(let i = 0; i<6-rating; i++){
-    blackstars.push(1)
-  }}
+
+  const tieneRating = estrellas !== null
+  estrellas = tieneRating ? Math.max(0, Math.min(MAX_ESTRELLAS, estrellas)) : 0
+
+  const arr = Array.from({ length: estrellas }, (_, i) => i)
+  const blackstars = Array.from({ length: MAX_ESTRELLAS - estrellas }, (_, i) => i)
 
   // Iniciales para la placa "attract mode" (ej. OVERWATCH 2 -> OV)
   const iniciales = (name || '?')
@@ -226,7 +243,7 @@ export default function ProductCard({ id, id_api, name, img, rating, platforms, 
             <div className="gc-attract relative flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[10px] border-2 border-line">
               <span className="font-display text-2xl leading-none text-void/55">{iniciales}</span>
               <span className="gc-pixel absolute bottom-1 right-1 rounded bg-bulb px-1 py-0.5 text-[7px] leading-none text-void">
-                {rating}/6
+                {tieneRating ? `${estrellas}/${MAX_ESTRELLAS}` : '—'}
               </span>
             </div>
             <div className="min-w-0 flex-1">
@@ -237,12 +254,21 @@ export default function ProductCard({ id, id_api, name, img, rating, platforms, 
                     <path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
                   </svg>
                 ))}
-                {rating < 6 ? blackstars.map((e, i) => (
+                {blackstars.map((e, i) => (
                   <svg key={`empty-${i}`} xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="#4a4438" className="bi bi-star" viewBox="0 0 16 16">
                     <path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.592l-.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>
                   </svg>
-                )) : null}
+                ))}
               </div>
+              {/* Veredicto de Steam + cuántas reseñas lo sostienen. Sin él no se
+                puede distinguir "4 estrellas de 5" de "4 estrellas de 5 pero de
+                dos personas". */}
+              {tieneRating && steam_rating_desc && (
+                <p className="gc-pixel mt-1 truncate text-[8px] uppercase text-dim" title={`${steam_rating_reviews || 0} reseñas en Steam`}>
+                  {steam_rating_desc}
+                  {steam_rating_reviews ? ` · ${steam_rating_reviews}` : ''}
+                </p>
+              )}
             </div>
           </div>
 

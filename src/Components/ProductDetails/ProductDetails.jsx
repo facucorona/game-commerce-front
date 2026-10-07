@@ -138,7 +138,13 @@ export default function ProductDetails() {
             {/* Spec-panel de la máquina */}
             <div className="mt-4 rounded-xl border-2 border-line bg-cab/80 p-5">
               <p className="gc-pixel mb-2 text-[9px] uppercase text-magenta">Spec panel</p>
-              {spec('Rating', game.rating)}
+              {/* Rating: primero el oficial de Steam (score 0-10 + veredicto).
+                  Antes se mostraba `game.rating`, que viene en escala 0-100 por
+                  herencia de RAWG y en 0 para lo importado de Steam. Si no hay
+                  rating oficial se cae al legacy; si tampoco, "Sin puntuar". */}
+              {game.steam_rating_score != null && game.steam_rating_score > 0
+                ? spec('Rating Steam', `${game.steam_rating_score}/10 · ${game.steam_rating_desc || '—'}${game.steam_rating_reviews ? ` (${game.steam_rating_reviews} reseñas)` : ''}`)
+                : spec('Rating', Number(game.rating) > 0 ? `${game.rating}/100` : 'Sin puntuar')}
               {spec('Metacritic', game.metacriticRating)}
               {spec('Esrb', game.esrb_rating)}
               {spec('Released', game.released)}

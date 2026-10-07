@@ -26,6 +26,14 @@ function Home() {
     const indexOfLastGame = currentPage * gamesPerPage;
     const indexOfFirstGame = indexOfLastGame - gamesPerPage;
     const currentGames = searchered.length ? searchered.slice(indexOfFirstGame, indexOfLastGame) : games.slice(indexOfFirstGame, indexOfLastGame);
+    // Rating oficial de Steam (score 0-10): se pasa a la tarjeta junto con el
+    // veredicto y la cantidad de reseñas. Antes sólo viajaba el campo legacy
+    // `rating`, que venía en 0 (importados de Steam) o 100 (herencia de RAWG).
+    const ratingDe = (e) => ({
+        steam_rating_score: e.steam_rating_score,
+        steam_rating_desc: e.steam_rating_desc,
+        steam_rating_reviews: e.steam_rating_reviews,
+    });
 
     const user = useSelector((state) => state.users),
         token = window.sessionStorage.getItem('token');
@@ -81,7 +89,7 @@ function Home() {
 
                     <div className="grid grid-cols-1 gap-5 pb-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {currentGames.length > 0 && currentGames.map(e => (
-                            <ProductCard key={e.id} name={e.name} id_api={e.id_api} id={e.id} img={e.background_image} rating={e.rating} genres={e.genres} platforms={e.platforms} price={e.price} fromApi={e.fromApi} isDisabled={e.isDisabled} />
+                            <ProductCard key={e.id} name={e.name} id_api={e.id_api} id={e.id} img={e.background_image} rating={e.rating} genres={e.genres} platforms={e.platforms} price={e.price} fromApi={e.fromApi} isDisabled={e.isDisabled} {...ratingDe(e)} />
                         ))}
                         {!show && <Spinner />}
                         {show && (currentGames.length < 1) && (
