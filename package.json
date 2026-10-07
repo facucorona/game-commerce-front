@@ -31,8 +31,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "start": "node --openssl-legacy-provider node_modules/react-scripts/scripts/start.js",
+    "build": "node --openssl-legacy-provider node_modules/react-scripts/scripts/build.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "build-css": "tailwindcss -i src/index.css -o public/styles.css",
@@ -41,6 +41,7 @@
   "overrides": {
     "babel-preset-react-app": "10.0.0"
   },
+  "comment": "Los scripts `start` y `build` pasan --openssl-legacy-provider como flag de línea de comandos (no como NODE_OPTIONS) porque webpack4 usa un hash MD4 que Node 17+ rechaza. Con el flag en el script, el build funciona en Vercel/CI sin configurar nada. OJO: ese flag no existe en Node 16, así que el proyecto necesita Node 17+.",
   "eslintConfig": {
     "extends": [
       "react-app",

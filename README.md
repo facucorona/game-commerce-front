@@ -17,10 +17,10 @@ Tienda de videojuegos con estética de sala recreativa. React 17 + Redux + Tailw
 
 ```powershell
 # API primero (puerto 3001), después el front (puerto 3000)
-$env:NODE_OPTIONS="--openssl-legacy-provider"; npm start
+npm start
 ```
 
-`NODE_OPTIONS` es obligatorio: CRA4 no compila con el OpenSSL de Node moderno.
+Los scripts ya pasan `--openssl-legacy-provider` solos (ver "Trampas de dependencias"), así que no hace falta exportar nada.
 
 ## Variables de entorno (`.env`)
 
@@ -62,18 +62,22 @@ La dirección arcade está documentada en `./DESIGN_SYSTEM.md` (tokens, recetas,
 
 ## Deploy (Vercel)
 
-Dos cosas obligatorias, ambas por el toolchain CRA4/webpack4:
+Solo hay que configurar **una variable de entorno**: `REACT_APP_URL`, apuntando al
+backend desplegado **con la barra final** (los thunks concatenan
+`${REACT_APP_URL}videogames`).
 
-1. **Variable de entorno `NODE_OPTIONS=--openssl-legacy-provider`.** Sin ella, webpack4
-   usa un hash de OpenSSL que Node 17+ ya no soporta y el build muere con
-   `ERR_OSSL_EVP_UNSUPPORTED`.
-2. **El build necesita `public/styles.css` compilado.** `styles.css` está
-   versionado (Tailwind corre por CLI, no por CRA), así que el build de Vercel lo
-   toma como está. Si tocás clases, corré `npm run build-css` y commiteá el
-   resultado.
+Dos cosas que ya están resueltas en el repo y conviene conocer antes de tocar nada:
 
-Además `REACT_APP_URL` debe apuntar al backend desplegado (con la barra final,
-los thunks concatenan `${REACT_APP_URL}videogames`).
+1. **El build no necesita `NODE_OPTIONS`.** Los scripts `start` y `build` invocan
+   `node --openssl-legacy-provider node_modules/react-scripts/scripts/*.js`. webpack4
+   usa un hash MD4 que Node 17+ rechaza; el flag va como flag de línea de comandos
+   (no como env var, que es lo que Vercel suele pedir a mano). Si algún día el
+   build vuelve a morir con `ERR_OSSL_EVP_UNSUPPORTED`, es que alguien volvió a
+   poner `react-scripts build` pelado en el script.
+2. **El build usa el `public/styles.css` versionado.** Tailwind corre por CLI
+   (`npm run build-css`), no por CRA, así que Vercel no lo recompila. Si tocás
+   clases nuevas, corré `build-css` y commiteá el `styles.css` resultante, o el
+   deploy va a tener estilos viejos.
 
 ### Trampas de dependencias (resueltas, no las toques sin leer)
 
@@ -85,4 +89,4 @@ los thunks concatenan `${REACT_APP_URL}videogames`).
   El build falla con `[BABEL] Requires Babel "^7.16.0", but was loaded with "7.12.3"`.
   Fijando `10.0.0` (que pide `7.12.3` exacto) el árbol queda consistente.
 
-Los dos van comentados en `.npmrc`. Si `npm run build` vuelve a romper, empezá por ahí.
+Si `npm install` o `npm run build` vuelven a romper, empezá por acá.
