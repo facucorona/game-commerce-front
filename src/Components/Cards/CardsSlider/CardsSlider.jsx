@@ -4,10 +4,37 @@ import ProductCard from '../ProductCard/ProductCard'
 import CardLanding from '../../CardLanding/CardLanding.jsx'
 
 
+// Cuántas tarjetas entran por slide según el ancho de la ventana. Antes era un
+// `window.screen.width > X` evaluado en render (y `screen`, no `innerWidth`, así
+// que no reacciona a redimensionar); ahora se calcula una vez por render con el
+// ancho real del viewport.
+function visibles() {
+  if (typeof window === 'undefined') return 1
+  if (window.innerWidth > 1200) return 3
+  if (window.innerWidth > 720) return 2
+  return 1
+}
+
 function CardSlider({ platforms, i }) {
   // ARCADE: carrusel de "cabinas en fila" — estado de React + translateX en el
   // track (antes dependía del JS de Bootstrap). Puntos = selectores de cabina.
-  const slides = platforms ? platforms.slice(0, 3) : []
+  //
+  // DEDUPLICADO: el catálogo viene con inclusiones de plataformas y géneros, así
+  // que el MISMO juego puede aparecer dos veces en `platforms` (cumplía dos
+  // criterios). Antes eso se veía literal en pantalla: "Risk of Rain 2" repetido
+  // en dos tarjetas del mismo slide. Se uniquifica por id conservando el orden.
+  const unicos = (platforms || []).filter(
+    (p, idx, arr) => arr.findIndex((q) => q && p && q.id === p.id) === idx
+  )
+  const porSlide = visibles()
+
+  // Se agrupan en páginas de tamaño `porSlide` (sin resto: una página con menos
+  // tarjetas que las demás dejaba huecos y hacía que el último slide se viera
+  // vacío al avanzar).
+  const slides = []
+  for (let s = 0; s < unicos.length; s += porSlide) {
+    slides.push(unicos.slice(s, s + porSlide))
+  }
   const [active, setActive] = useState(0)
 
   const goTo = (n) => {
@@ -35,44 +62,19 @@ function CardSlider({ platforms, i }) {
             className="flex transition-transform duration-500"
             style={{ transform: `translateX(-${active * 100}%)` }}
           >
-            {slides.map((product, idx) => (
+            {slides.map((grupo, idx) => (
               <div key={idx} className="flex w-full shrink-0 items-stretch justify-center gap-6 px-2">
-                <div className="mx-5 my-2">
-                  <CardLanding
-                    key={idx}
-                    id={platforms[idx]?.id}
-                    name={platforms[idx].name}
-                    img={platforms[idx].background_image}
-                    rating={platforms[idx].rating}
-                    price={platforms[idx].price}
-                  />
-                </div>
-                {window.screen.width > 1200 && idx + 1 < platforms.length ?
-                  <div className="mx-5 my-2">
+                {grupo.map((producto) => (
+                  <div key={producto.id} className="mx-5 my-2">
                     <CardLanding
-                      key={idx + 1}
-                      id={platforms[idx + 1]?.id}
-                      name={platforms[idx + 1].name}
-                      img={platforms[idx + 1].background_image}
-                      rating={platforms[idx + 1].rating}
-                      price={platforms[idx + 1].price}
+                      id={producto.id}
+                      name={producto.name}
+                      img={producto.background_image}
+                      rating={producto.rating}
+                      price={producto.price}
                     />
                   </div>
-                  : ''
-                }
-                {window.screen.width > 720 && idx + 2 < platforms.length ?
-                  <div className="mx-5 my-2">
-                    <CardLanding
-                      key={idx + 2}
-                      id={platforms[idx + 2]?.id}
-                      name={platforms[idx + 2].name}
-                      img={platforms[idx + 2].background_image}
-                      rating={platforms[idx + 2].rating}
-                      price={platforms[idx + 2].price}
-                    />
-                  </div>
-                  : ''
-                }
+                ))}
               </div>
             ))}
           </div>
