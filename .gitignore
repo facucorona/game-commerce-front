@@ -13,3 +13,6 @@ build/
 # dependencias sea delicado; sin el lock, Vercel lo resuelve de cero en cada
 # build y el resultado depende de qué publique npm ese día.
 # Ojo: si tocás package.json, regenerá el lock antes de pushear.
+
+.vercel
+.env*
