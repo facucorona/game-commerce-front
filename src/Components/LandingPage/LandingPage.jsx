@@ -45,12 +45,24 @@ export default function LandingPage() {
             >
               Insert coin
             </Link>
-            <a
+            {/* Antes era un ancla `href="#catalogo"`, que sólo hacía scroll dentro de la
+                landing hasta el carrusel de ofertas. Ahora es una navegación de
+                verdad al catálogo completo, con filtros y paginación.
+                Se sigue usando `Link` (ya importado arriba) y NO un
+                `<a href="/home">`, para que la ruta la resuelva react-router
+                sin recargar la página.
+                El `className` no se toca a propósito: Tailwind corre por CLI en
+                este repo (`npm run build-css`) y `public/styles.css` está
+                versionado, así que cambiar clases obligaría a recompilar y
+                commitear el CSS.
+                La sección `#catalogo` sigue renderizando abajo en la landing
+                (`location.pathname === "/"`): sólo pierde este atajo. */}
+            <Link
               className="gc-pixel rounded-md border border-neon/70 px-7 py-4 text-[11px] uppercase text-neon transition hover:bg-neon/10"
-              href="#catalogo"
+              to="/home"
             >
               Ver catálogo
-            </a>
+            </Link>
           </div>
         </div>
       </section>
